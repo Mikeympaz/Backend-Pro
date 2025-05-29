@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Management</title>
+    <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+    <h1>Welcome to our Student Hostel Management System</h1>
+    
+    <h2>Signup</h2>
+<form id="signupForm">
+    <input type="text" id="name" placeholder="👤 Enter Name" required>
+    <input type="email" id="email" placeholder="✉️ Enter Email" required>
+    <input type="text" id="username" placeholder="🔑 Enter Username" required>
+    <input type="password" id="password" placeholder="🔒 Enter Password" required>
+    <button type="submit">Sign Up</button>
+</form>
+
+    
+    <h2>Login</h2>
+    <form id="loginForm">
+        <input type="text" id="loginUsername" placeholder="Enter Username" required>
+        <input type="password" id="loginPassword" placeholder="Enter Password" required>
+        <button type="submit">Log In</button>
+    </form>
+
+    <h2>Book a Room</h2>
+    <div class="room-images"> 
+        <img src="room1.jpg" alt="Single Room" width="300">
+        <img src="room2.jpeg" alt="Shared Room" width="300"> 
+    </div>
+    <h2>Book a Room</h2>
+<form id="bookingForm">
+    <input type="text" id="user_id" placeholder="User ID (auto-filled)" readonly required>
+    <select id="room_id">
+        <option>Loading rooms...</option>
+    </select>
+    <input type="date" id="check_in_date" required>
+    <input type="date" id="check_out_date" required>
+    <button type="submit">Book Room</button>
+</form>
+
+    <h2>Confirm Your Payment</h2>
+<form id="paymentForm">
+    <input type="text" id="user_id_payment" placeholder="User ID (auto-filled)" readonly required>
+    <input type="text" id="booking_id" placeholder="Enter Booking ID or auto-filled" required>
+    <input type="text" id="transaction_id" placeholder="Enter Transaction ID manually or leave empty for auto-fill">
+    <input type="number" id="amount" placeholder="Enter Amount" required>
+    <button type="submit">Submit Payment</button>
+</form>
+
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("paymentForm").addEventListener("submit", async function(event) {
+                event.preventDefault();
+    
+                const user_id = document.getElementById("user_id_payment").value.trim();
+                const booking_id = document.getElementById("booking_id").value.trim();
+                const transaction_id = document.getElementById("transaction_id").value.trim();
+                const amount = document.getElementById("amount").value.trim();
+    
+                console.log("🔍 Sending Data:", { user_id, booking_id, transaction_id, amount }); // ✅ Debugging
+                console.log("✅ User ID:", user_id);
+            console.log("✅ Booking ID:", booking_id);
+            console.log("✅ Transaction ID:", transaction_id);
+            console.log("✅ Amount:", amount);
+                if (!user_id || !booking_id || !transaction_id || !amount) {
+                    alert("All fields are required!");
+                    return;
+                }
+    
+                try {
+                    const response = await fetch("http://localhost:5000/api/payments", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ user_id, booking_id, transaction_id, amount, status: "pending" })
+                    });
+    
+                    const data = await response.json();
+                    alert(data.message || "Payment Submitted Successfully!");
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("Something went wrong. Please try again.");
+                }
+            });
+        });
+    </script>
+    
+
+
+    <script>
+        // ✅ Signup Request
+        document.getElementById("signupForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            if (!name || !email || !username || !password) {
+                alert("All fields are required!");
+                return;
+            }
+
+            const response = await fetch("http://localhost:5000/api/users/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, username, password })
+            });
+
+            const data = await response.json();
+            alert(data.message);
+        });
+
+        // ✅ Login Request
+        // ✅ Login Request with User ID Storage
+document.getElementById("loginForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    const username = document.getElementById("loginUsername").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    if (!username || !password) {
+        alert("Username and password are required!");
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:5000/api/users/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (data.user_id) {
+            localStorage.setItem("user_id", data.user_id); // ✅ Store User ID in local storage
+        }
+
+        alert(`Login Successful! Token: ${data.token || "Error: Token not received"}`);
+    } catch (error) {
+        console.error("Login Error:", error);
+        alert("Failed to log in. Please try again.");
+    }
+});
+
+
+        // ✅ Room Booking Request
+        document.getElementById("bookingForm").addEventListener("submit", async function(event) {
+            event.preventDefault(); // Prevent page reload
+
+            const user_id = document.getElementById("user_id").value.trim();
+            const room_id = document.getElementById("room_id").value.trim();
+            const check_in_date = document.getElementById("check_in_date").value;
+            const check_out_date = document.getElementById("check_out_date").value;
+
+            if (!user_id || !room_id || !check_in_date || !check_out_date) {
+                alert("All fields are required!");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:5000/api/bookings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id, room_id, check_in_date, check_out_date })
+                });
+
+                const data = await response.json();
+                alert(data.message || "Booking Successful!");
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Something went wrong. Please try again.");
+            }
+
+        });
+        document.getElementById("paymentForm").addEventListener("submit", async function(event) {
+    event.preventDefault(); // Stop the page from reloading
+
+    const user_id = document.getElementById("user_id_payment").value.trim();
+    const booking_id = document.getElementById("booking_id").value.trim();
+    const transaction_id = document.getElementById("transaction_id").value.trim();
+    const amount = document.getElementById("amount").value.trim(); // 👈 Add this 
+
+    if (!user_id || !booking_id || !transaction_id) {
+        alert("All fields are required!");
+        return;
+    }
+
+    try {
+        const response = await fetch("http://localhost:5000/api/payments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id, booking_id, transaction_id,amount, status: "pending" })
+        });
+
+        const data = await response.json();
+        alert(data.message || "Payment Submitted Successfully!");
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong. Please try again.");
+    }
+});
+
+    </script>
+  <script src="script.js"></script>
+  
+</body>
+</html>
